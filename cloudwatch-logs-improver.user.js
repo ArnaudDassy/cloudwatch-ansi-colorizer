@@ -217,9 +217,9 @@ const processMutations = (mutationsList) => {
 			if (tr) {
 				for (let i = 0; i < len_nodes; i++) {
 					let content = mutation.addedNodes[i].innerHTML;
-					if (content.includes('ERROR')) {
+					if (content.includes('31mERROR')) {
 						tr.style.backgroundColor = errorBackground;
-					} else if(content.includes('WARN')) {
+					} else if(content.includes('33m WARN')) {
 						tr.style.backgroundColor = warnBackground;
 					}
 				}
