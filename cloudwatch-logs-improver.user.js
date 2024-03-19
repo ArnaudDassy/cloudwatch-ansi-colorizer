@@ -42,10 +42,13 @@ const escape_codes = new Map(
 
 const match_pattern = /[\u001b]+(?:\[(\d+;?)*m)?/;
 const datePattern = /\d{4}-\d{2}-\d{2}\w\d{2}:\d{2}:\d{2}.\d+\+\d{2}:\d{2}/;
-const breakLinePattern = /\\r/gm;
+const breakLinePattern = /\\r\s*/gm;
 
 const breakLineString = '<\/br>';
 const spaceString = '&nbsp;';
+
+const warnBackground = 'rgba(255, 255, 0, 0.1)';
+const errorBackground = 'rgba(255, 0, 0, 0.1)';
 
 const processAsciReplacement = (content, replacementString) => {
 	if ((content || '').trim().length === 0) {
@@ -130,7 +133,7 @@ function recurseNodes(nodes) {
 			(node.classList.contains('logs__log-events-table__content') && node.parentNode.dataset.testid === 'logs__log-events-table__formatted-message')
 		) {
 			let replacementString = '';
-			if (node.dataset !== undefined && node.dataset.testid === 'logs__log-events-table__message'){
+			if (node.dataset !== undefined && node.dataset.testid === 'logs__log-events-table__message') {
 				replacementString = spaceString;
 			} else {
 				replacementString = breakLineString;
@@ -152,6 +155,21 @@ const processMutations = (mutationsList) => {
 			if (tr && cell.length > 1) {
 				maybeUpdateNode(cell[1].firstChild, spaceString);
 			}
+
+			if (tr) {
+				const spans = Array.from(tr.querySelectorAll('span'));
+				if (spans) {
+					const errors = spans.find(span => span.textContent === 'ERROR');
+					const warns = spans.find(span => span.textContent === 'WARN');
+					console.log(errors);
+					if (errors && errors.length > 0) {
+						tr.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+					} else if (warns && warns.length > 0) {
+						tr.style.backgroundColor = 'rgba(255, 255, 0, 0.2)';
+					}
+				}
+			}
+
 			return;
 		}
 
@@ -193,6 +211,20 @@ const processMutations = (mutationsList) => {
 			maybeUpdateNode(addedNode, breakLineString);
 		}
 
+		if (target.nodeName === 'TR') {
+			const tr = mutation.target;
+			tr.style.backgroundColor = undefined;
+			if (tr) {
+				for (let i = 0; i < len_nodes; i++) {
+					let content = mutation.addedNodes[i].innerHTML;
+					if (content.includes('ERROR')) {
+						tr.style.backgroundColor = errorBackground;
+					} else if(content.includes('WARN')) {
+						tr.style.backgroundColor = warnBackground;
+					}
+				}
+			}
+		}
 	});
 };
 
